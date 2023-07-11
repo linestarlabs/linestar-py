@@ -1,5 +1,5 @@
 pycomm3
 python-dotenv
 flask
-flask-restplus
+flask-restx
 click

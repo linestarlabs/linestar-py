@@ -1,63 +1,66 @@
 from flask import Flask
-from flask_restplus import Api, Resource
+from flask_restx import Api, Resource
 
-from linestar.plc_magnet_mover import PLCMagnetMover
-
+from plc_magnet_mover import PLCMagnetMover
 
 app = Flask(__name__)
-api = Api(app, title='Linestar PLC Magnet Mover', description='API endpoints for PLC Magnet Mover')
+api = Api(app, default_endpoint='https://linestarautomation.com/api/v0.0.4', version='0.0.4', title='Linestar Machine Controller APIs', description='Machine Controller API endpoints for Linestar Automation Developer Platform' )
 
+ns = api.namespace('controllers/magnet-mover', description='PLC Magnet Mover API')
 
-@api.route('/wake')
+@ns.route('/connect/<string:ip>')
+class Connect(Resource):
+    @ns.doc('connect')
+    def get(self, ip):
+        """Connect to the PLC"""
+        magnet_mover = PLCMagnetMover(ip)
+        magnet_mover.connect()
+        return {'message': 'Connected to PLC'}
+
+@ns.route('/wake')
 class Wake(Resource):
-    def post(self):
-        client = PLCMagnetMover()
-        client.connect()
-        client.wake()
-        client.close()
-        return {'message': 'System woke up successfully'}, 200
+    @ns.doc('wake')
+    def get(self):
+        """Wake up the system"""
+        magnet_mover = PLCMagnetMover()
+        magnet_mover.wake()
+        return {'message': 'System woke up successfully'}
 
-
-@api.route('/move_to_home')
+@ns.route('/move_to_home')
 class MoveToHome(Resource):
-    def post(self):
-        client = PLCMagnetMover()
-        client.connect()
-        client.move_to_home()
-        client.close()
-        return {'message': 'Moved to home position successfully'}, 200
+    @ns.doc('move_to_home')
+    def get(self):
+        """Move to the home position"""
+        magnet_mover = PLCMagnetMover()
+        magnet_mover.move_to_home()
+        return {'message': 'Moved to home position successfully'}
 
-
-@api.route('/go_to_position/<float:x>/<float:y>')
+@ns.route('/go_to_position/<float:x>/<float:y>')
 class GoToPosition(Resource):
-    def post(self, x, y):
-        client = PLCMagnetMover()
-        client.connect()
-        client.go_to_position(x, y)
-        client.close()
-        return {'message': f'Moved to position ({x}, {y}) successfully'}, 200
+    @ns.doc('go_to_position')
+    def get(self, x, y):
+        """Go to a specific position"""
+        magnet_mover = PLCMagnetMover()
+        magnet_mover.go_to_position(x, y)
+        return {'message': f'Moved to position ({x}, {y}) successfully'}
 
-
-@api.route('/report_location')
+@ns.route('/report_location')
 class ReportLocation(Resource):
+    @ns.doc('report_location')
     def get(self):
-        client = PLCMagnetMover()
-        client.connect()
-        location = client.report_location()
-        client.close()
-        return {'location': location}, 200
+        """Report the current location"""
+        magnet_mover = PLCMagnetMover()
+        location = magnet_mover.report_location()
+        return {'location': location}
 
-
-@api.route('/report_error_margin')
+@ns.route('/report_error_margin')
 class ReportErrorMargin(Resource):
+    @ns.doc('report_error_margin')
     def get(self):
-        client = PLCMagnetMover()
-        client.connect()
-        error_margin = client.report_error_margin()
-        client.close()
-        return {'error_margin': error_margin}, 200
-
+        """Report the error margin"""
+        magnet_mover = PLCMagnetMover()
+        error_margin = magnet_mover.report_error_margin()
+        return {'error_margin': error_margin}
 
 if __name__ == '__main__':
-    app.run(debug=True)
-
+    app.run(host='0.0.0.0', debug=True)

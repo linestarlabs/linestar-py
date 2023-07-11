@@ -1,3 +1,4 @@
 dist/
 test_env/
 build/
+.env
